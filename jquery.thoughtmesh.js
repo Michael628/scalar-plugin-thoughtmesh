@@ -120,8 +120,8 @@
             var $internal = $('<div />').addClass('row tm-scroll').appendTo($box);
             for(var i in results['internal']) {
                 var entry = results['internal'][i];
-                $('<div></div>').appendTo($internal).html(entry.author+',&nbsp;"'+entry.title+'"').css('color','#aaa').addClass('col-md-12');
-                $('<div></div>').appendTo($internal).html(entry.lexia).css('color',base).addClass('col-md-11 col-md-offset-1');
+                $('<div></div>').appendTo($internal).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
+                $('<div></div>').appendTo($internal).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
                 $('<div></div>').appendTo($internal).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
             }
             $('<div />').html('<hr />').addClass('row').wrapInner($('<div />').addClass('col-md-12')).appendTo($box);
@@ -130,18 +130,10 @@
             var $external = $('<div />').addClass('row tm-scroll').appendTo($box);
             for(var i in results['external']) {
                 var entry = results['external'][i];
-                $('<div></div>').appendTo($external).html(entry.author+',&nbsp;"'+entry.title+'"').css('color','#aaa').addClass('col-md-12');
-                $('<div></div>').appendTo($external).html(entry.lexia).css('color',base).addClass('col-md-11 col-md-offset-1');
+                $('<div></div>').appendTo($external).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
+                $('<div></div>').appendTo($external).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
                 $('<div></div>').appendTo($external).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
             }
-
-            $('.tm-excerpt').css('overflow','hidden');
-            $('.tm-excerpt').css('display','-webkit-box');
-            $('.tm-excerpt').css('-webkit-line-clamp','3');
-            $('.tm-excerpt').css('-webkit-box-orient','vertical');
-            $('.tm-scroll').css('overflow-x','hidden');
-            $('.tm-scroll').css('overflow-y','auto');
-            $('.tm-scroll').css('max-height','300px');
         };
 
         $this.append('<div id="tm_footer" class="col-md-9 col-sm-12 col-xs-12"></div>');
@@ -171,26 +163,9 @@
             $("#tm_footer").append($row);
         }
         $('.tm-link:first').removeClass('tm-link');
+        $('.tm-key:first, .tm-text:first').addClass('tm-header');
         $('.tm-link').click(openModal);
         $('.tm-tag').wrapInner('<div style="float:right"></div>');
         $('.tm-tag:first').empty();
-
-        //Styling w/o an external sheet
-        $('.tm-link').css('cursor','pointer');
-        $('.tm-link').hover(function() {
-            $(this).css('text-decoration','underline');
-        },function() {
-            $(this).css('text-decoration','none');
-        });
-        $('.tm-article').css('color',adjustColor(base,-60));
-        $('.tm-key').css('color',base);
-        $('.tm-tag').css('color',base);
-        $('#tm_footer').css('border','3px solid '+base);
-        $('#tm_footer').css('border-radius','10px');
-        $('#tm_footer').css('padding','10px 0');
-        $('.tm-author').css('font-weight','bold');
-        $('.tm-text:first, .tm-key:first').css('color','#aaa');
-
-
     }
 }( jQuery ));

@@ -1,0 +1,40 @@
+.tm-excerpt {
+	overflow:hidden;
+	display:-webkit-box;
+	-webkit-line-clamp:3;
+	-webkit-box-orient:vertical;
+}
+
+.tm-scroll {
+	overflow-x:hidden;
+	overflow-y:auto;
+	max-height:300px;
+}
+
+.tm-link {
+	cursor:pointer;
+}
+
+.tm-link:hover {
+    text-decoration:underline;
+}
+
+.tm-article {
+	color: #009561; //adjustColor(base,-60);
+}
+
+.tm-key, .tm-tag, .tm-text {
+	color:#26d19d;
+}
+
+#tm_footer {
+	border:3px solid #26d19d;
+	border-radius:10px;
+	padding:10px 0;
+}
+.tm-author {
+	font-weight:bold;
+}
+.tm-header {
+	color:#aaa;
+}

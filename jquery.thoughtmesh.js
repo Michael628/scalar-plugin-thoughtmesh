@@ -69,7 +69,6 @@
                 var $this = $(this);
                 var tag = $this.data('tm-tag');
                 var results = getRelated(tag);
-
                 bootbox.dialog({
                 	size: 'large',
                     message: '<div id="bootbox-thoughtmesh-content" class="heading_font"></div>',
@@ -103,8 +102,17 @@
             return related;
         };
 
-        var $wrapper = $('<div class="tm_footer container-fluid"></div>').appendTo($this);
+        var $wrapper = $('<div class="tm_footer container-fluid"><div class="tm_logo caption_font">ThoughtMesh &nbsp; <a href="javascript:void(null);" class="glyphicon glyphicon-question-sign" title="What is ThoughtMesh?"></a></div></div>').appendTo($this);
         var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-5 col-xs-8 col-sm-6'><div class=\"tm-header\">Articles</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
+        $wrapper.find('.glyphicon:first').click(function() {
+            bootbox.dialog({
+                message: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus tempus tellus in aliquet gravida. Nulla consequat fringilla pharetra. Phasellus feugiat, dolor nec pulvinar vulputate, felis erat tincidunt elit, ac vulputate lectus arcu a urna. Phasellus sed convallis quam. Aenean vel pretium felis. Nam massa nisl, vulputate sed dapibus nec, tristique eu nisi.</p><form class="to_tm_button" action="http://thoughtmesh.net"><button class="btn btn-primary" type="submit">ThoughtMesh home page</button></form>',
+                title: 'What is ThoughtMesh?',
+                className: 'thoughtmesh_bootbox',
+                animate: ( (navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true )// Panel is unclickable if true for iOS
+            });
+        	$(this).blur();
+        });
         for (var i in results) {
             var $row = $("<div class='row'><div class='tm-tag col-md-2 col-sm-2 col-xs-4'></div><div class='tm-article col-md-5 col-xs-8 col-sm-6'></div><div class='tm-key col-md-4 col-sm-4 hidden-xs'></div></div>").appendTo($wrapper);
             var $article = $row.children('.tm-article:first');

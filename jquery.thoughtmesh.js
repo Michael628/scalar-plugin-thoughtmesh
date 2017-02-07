@@ -68,34 +68,52 @@
                 var self = this;
                 var $this = $(this);
                 var tag = $this.data('tm-tag');
-                var results = getRelated(tag);
                 bootbox.dialog({
                 	size: 'large',
                     message: '<div id="bootbox-thoughtmesh-content" class="heading_font"></div>',
-                    title: 'ThoughtMesh pages related to <b>'+tag+'</b>',
+                    title: 'ThoughtMesh pages related to '+tag,
                     className: 'thoughtmesh_bootbox',
                     animate: ( (navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true )// Panel is unclickable if true for iOS
                 });
-                $('.thoughtmesh_bootbox .modal-body').height( parseInt($(window).height()) * 0.83 );
-                $('.bootbox-close-button').empty();
-                $('.bootbox').find( '.modal-title' ).addClass( 'heading_font' );
-                var $box = $('<div />').addClass('container-fluid').appendTo($('#bootbox-thoughtmesh-content'));
-                $('<div>Excerpts Here</div>').appendTo($box).addClass('h5 heading_font col-md-12').wrap($('<div />').addClass('row'));
-                var $internal = $('<div />').addClass('row').appendTo($box);
-                for(var i in results['internal']) {
-                    var entry = results['internal'][i];
-                    $('<div></div>').appendTo($internal).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
-                    $('<div></div>').appendTo($internal).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
-                    $('<div></div>').appendTo($internal).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
-                };
-                $('<div>Excerpts Out</div>').appendTo($box).addClass('h5 heading_font col-md-12').wrap($('<div />').addClass('row'));
-                var $external = $('<div />').addClass('row').appendTo($box);
-                for(var i in results['external']) {
-                    var entry = results['external'][i];
-                    $('<div></div>').appendTo($external).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
-                    $('<div></div>').appendTo($external).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
-                    $('<div></div>').appendTo($external).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
-                };
+                var $box = $('.thoughtmesh_bootbox');
+                var $content = $box.find('#bootbox-thoughtmesh-content');
+                $content.append('<h5>Loading...</h5>');
+                $box.find('.modal-body').height( parseInt($(window).height()) * 0.83 );
+                $box.find('.bootbox-close-button').empty();
+                $box.find( '.modal-title' ).addClass( 'heading_font' );
+                var document_id = 455;  // Temp
+                var group_id = 0;
+                $.getScript('http://thoughtmesh.net/export/outsideLexias.json.php?tag='+encodeURIComponent(tag)+'&documentid='+document_id+'&groupid='+group_id+'&external=1&time='+$.now(), function() {
+                	outsideLexiasFun();
+                	if ('undefined'==typeof(outsideLexiasObj)) {
+                		alert('Something went wrong attempting to get tag information from ThoughtMesh. Please try again');
+                		return false;
+                	}
+                	$content.empty();
+	                var $container = $('<div />').addClass('container-fluid').appendTo($content);
+	                /*
+	                $('<div>Excerpts Here</div>').appendTo($box).addClass('h5 heading_font col-md-12').wrap($('<div />').addClass('row'));
+	                var $internal = $('<div />').addClass('row').appendTo($box);
+	                for(var i in results['internal']) {
+	                    var entry = results['internal'][i];
+	                    $('<div></div>').appendTo($internal).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
+	                    $('<div></div>').appendTo($internal).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
+	                    $('<div></div>').appendTo($internal).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
+	                };
+	                */
+	                $('<div>Excerpts Out</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
+	                var $external = $('<div />').addClass('row').appendTo($container);
+	                for(var j in outsideLexiasObj) {
+	                    var entry = outsideLexiasObj[j];
+	                    $('<div></div>').appendTo($external).html(entry.author+',&nbsp;"<a href="'+entry.url+'" target="_blank">'+entry.title+'</a>"').addClass('col-md-12 tm-header');
+	                    for(var k in entry['lexias']) {
+	                    	var lexia = entry['lexias'][k];
+	                    	$('<div></div>').appendTo($external).html('<a href="'+entry.url+'#'+lexia.anchor+'" target="_blank">'+lexia.heading+'</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
+	                    	$('<div></div>').appendTo($external).html(lexia.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+	                    }
+	                };
+	                $('<div class="row">&nbsp;</div>').appendTo($container);
+                });
         };
 
         var getRelated = function(tag) {

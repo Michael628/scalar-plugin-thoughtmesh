@@ -32,14 +32,11 @@
 .tm-author {
 	font-weight:bold;
 }
-.tm-key, .tm-text {
-	color:#1d9b76;
-}
 .tm-tag {
 	color:#26d19d;
 }
 .tm-link {
-	cursor:pointer;
+	cursor:pointer; color:#1d9b76; 
 }
 .tm-link:hover {
     text-decoration:underline;
@@ -47,11 +44,23 @@
 
 /* Modal */
 #bootbox-thoughtmesh-content {
-	font-size:smaller;
+	font-size:14px;
+}
+#bootbox-thoughtmesh-content .tm-anchor {
+	margin-top:6px;
 }
 #bootbox-thoughtmesh-content .tm-excerpt {
-	margin-bottom:12px;
+	margin-bottom:6px;
 }
 .thoughtmesh_bootbox .modal-body {
 	overflow:auto;
+}
+.thoughtmesh_bootbox a {
+	color:#1d9b76; text-decoration:none;
+}
+.thoughtmesh_bootbox a:hover {
+	text-decoration:underline;
+}
+.thoughtmesh_bootbox .tm-header {
+	margin-top:6px;
 }

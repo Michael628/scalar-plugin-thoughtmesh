@@ -8,55 +8,25 @@
 	
 	var results = [  // Temp
         {
-            'author':"Palin",
+            'author':"Sarah Palin",
             'text':"Why I endorsed Donald Trump",
             'keys':['collaboration','defect','politics']
         },
         {
-            'author':"Brooks",
+            'author':"John Brooks",
             'text':"Donald Trump and the end of time",
             'keys':['defect','politics']
         },
         {
-            'author':"Jones",
-            'text':"Problems of collaboration...",
+            'author':"Alice Jones",
+            'text':"Problems of collaboration",
             'keys':['collaboration','defect']
         },
         {
-            'author':"Gonzalez",
-            'text':"An analysis of community interfaces...",
+            'author':"Maria Gonzalez",
+            'text':"An analysis of community interfaces that are built by community members",
             'keys':['collaboration']
         }];
-	
-	var related = {
-            'internal': [{
-                'author':'Michael Lynch',
-                'title':'Twin Paradox',
-                'lexia':'It was the best of times',
-                'excerpt':'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-            },{
-                'author':'George R.R. Martin',
-                'title':'When?',
-                'lexia':'Soon',
-                'excerpt':'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-            }],
-            'external': [{
-                'author':'Richard Feynman',
-                'title':'You Must Be Joking...',
-                'lexia':'Path Integrals',
-                'excerpt':'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-            },{
-                'author':'Bertrand Russell',
-                'title':'Logicomix',
-                'lexia':'Let\'s play a game',
-                'excerpt':'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-            },{
-                'author':'Paul Dirac',
-                'title':'Relativistic Quantum Mechanics',
-                'lexia':'We got this',
-                'excerpt':'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-            }]
-        };
 	
     $.fn.thoughtmesh = function(options) {
         var self = this;
@@ -121,7 +91,7 @@
         };
 
         var $wrapper = $('<div class="tm_footer container-fluid"><div class="tm_logo caption_font">ThoughtMesh &nbsp; <a href="javascript:void(null);" class="glyphicon glyphicon-question-sign" title="What is ThoughtMesh?"></a></div></div>').appendTo($this);
-        var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-5 col-xs-8 col-sm-6'><div class=\"tm-header\">Articles</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
+        var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-5 col-xs-8 col-sm-6'><div class=\"tm-header\">Related documents</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
         $wrapper.find('.glyphicon:first').click(function() {
             bootbox.dialog({
                 message: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus tempus tellus in aliquet gravida. Nulla consequat fringilla pharetra. Phasellus feugiat, dolor nec pulvinar vulputate, felis erat tincidunt elit, ac vulputate lectus arcu a urna. Phasellus sed convallis quam. Aenean vel pretium felis. Nam massa nisl, vulputate sed dapibus nec, tristique eu nisi.</p><form class="to_tm_button" action="http://thoughtmesh.net"><button class="btn btn-primary" type="submit">ThoughtMesh home page</button></form>',
@@ -138,7 +108,7 @@
             if ('undefined' != typeof(results[i].author)) {
                 $("<span class='tm-author'></span>").html(results[i].author+',&nbsp;').appendTo($article);
             }
-            // Text
+            // Title
             $("<span class='tm-text'></span>").html(results[i].text).appendTo($article);
             // Tags
             $row.children('.tm-tag').html(('<span class="glyphicon glyphicon-tag"></span>').repeat(results[i].keys.length));

@@ -29,16 +29,20 @@
 .tm-header {
 	color:#888888;
 }
-.tm-author {
-	font-weight:bold;
+.tm-article {
+	white-space:nowrap;
+	overflow:hidden;
 }
 .tm-tag {
 	color:#26d19d;
 }
-.tm-link {
+.tm-tag .glyphicon {
+	top:2px;
+}
+.tm-link, .tm-text {
 	cursor:pointer; color:#1d9b76; 
 }
-.tm-link:hover {
+.tm-link:hover, .tm-text:hover {
     text-decoration:underline;
 }
 

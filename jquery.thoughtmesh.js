@@ -1,130 +1,382 @@
 /**
- * @required bootbox
+ * @requires bootbox
  */
+(function($) {
 
-(function( $ ) {
-	
-	var defaults = {};
-	
-	var results = [  // Temp
-        {
-            'author':"Sarah Palin",
-            'text':"Why I endorsed Donald Trump",
-            'keys':['collaboration','defect','politics']
-        },
-        {
-            'author':"John Brooks",
-            'text':"Donald Trump and the end of time",
-            'keys':['defect','politics']
-        },
-        {
-            'author':"Alice Jones",
-            'text':"Problems of collaboration",
-            'keys':['collaboration','defect']
-        },
-        {
-            'author':"Maria Gonzalez",
-            'text':"An analysis of community interfaces that are built by community members",
-            'keys':['collaboration']
-        }];
-	
+    var defaults = {
+        'namespace': 'thoughtmesh'
+    };
+
     $.fn.thoughtmesh = function(options) {
-        var self = this;
         var $this = $(this);
-        var opts = $.extend( {}, defaults, options );
-        $.getScript($('link#approot').attr('href')+'plugins/thoughtmesh/lib/bootbox.min.js', function(data,textStatus,jqxhr) {});
-        
-        var openModal = function() {
-                var self = this;
-                var $this = $(this);
-                var tag = $this.data('tm-tag');
-                bootbox.dialog({
-                	size: 'large',
-                    message: '<div id="bootbox-thoughtmesh-content" class="heading_font"></div>',
-                    title: 'ThoughtMesh pages related to '+tag,
-                    className: 'thoughtmesh_bootbox',
-                    animate: ( (navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true )// Panel is unclickable if true for iOS
-                });
-                var $box = $('.thoughtmesh_bootbox');
-                var $content = $box.find('#bootbox-thoughtmesh-content');
-                $content.append('<h5>Loading...</h5>');
-                $box.find('.modal-body').height( parseInt($(window).height()) * 0.83 );
-                $box.find('.bootbox-close-button').empty();
-                $box.find( '.modal-title' ).addClass( 'heading_font' );
-                var document_id = 455;  // Temp
-                var group_id = 0;
-                $.getScript('http://thoughtmesh.net/export/outsideLexias.json.php?tag='+encodeURIComponent(tag)+'&documentid='+document_id+'&groupid='+group_id+'&external=1&time='+$.now(), function() {
-                	outsideLexiasFun();
-                	if ('undefined'==typeof(outsideLexiasObj)) {
-                		alert('Something went wrong attempting to get tag information from ThoughtMesh. Please try again');
-                		return false;
-                	}
-                	$content.empty();
-	                var $container = $('<div />').addClass('container-fluid').appendTo($content);
-	                /*
-	                $('<div>Excerpts Here</div>').appendTo($box).addClass('h5 heading_font col-md-12').wrap($('<div />').addClass('row'));
-	                var $internal = $('<div />').addClass('row').appendTo($box);
-	                for(var i in results['internal']) {
-	                    var entry = results['internal'][i];
-	                    $('<div></div>').appendTo($internal).html(entry.author+',&nbsp;"'+entry.title+'"').addClass('col-md-12 tm-header');
-	                    $('<div></div>').appendTo($internal).html(entry.lexia).addClass('col-md-11 col-md-offset-1 tm-text');
-	                    $('<div></div>').appendTo($internal).html(entry.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt');
-	                };
-	                */
-	                $('<div>Excerpts Out</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
-	                var $external = $('<div />').addClass('row').appendTo($container);
-	                for(var j in outsideLexiasObj) {
-	                    var entry = outsideLexiasObj[j];
-	                    $('<div></div>').appendTo($external).html(entry.author+',&nbsp;"<a href="'+entry.url+'" target="_blank">'+entry.title+'</a>"').addClass('col-md-12 tm-header');
-	                    for(var k in entry['lexias']) {
-	                    	var lexia = entry['lexias'][k];
-	                    	$('<div></div>').appendTo($external).html('<a href="'+entry.url+'#'+lexia.anchor+'" target="_blank">'+lexia.heading+'</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
-	                    	$('<div></div>').appendTo($external).html(lexia.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
-	                    }
-	                };
-	                $('<div class="row">&nbsp;</div>').appendTo($container);
-                });
+        var opts = $.extend({}, defaults, options);
+        if ('undefined' == typeof(opts.book_id)) {
+            opts.book_id = ($('link#book_id').length) ? parseInt($('link#book_id').attr('href')) : 0;
+        };
+        if ('undefined' == typeof(opts.page_id)) {
+        	var urn = $('link#urn').attr('href');
+            opts.page_id = ($('link#urn').length) ? parseInt(urn.substr(urn.lastIndexOf(':')+1)) : 0;
         };
 
-        var getRelated = function(tag) {
-            return related;
+        // List excerpts here and there based on a tag
+        var tagModal = function() {
+            var $this = $(this);
+            var tag = $this.data('tm-tag');
+            var obj = JSON.parse(localStorage[opts.namespace]);
+            var version_urn = $('link#urn').attr('href');
+            var version_id = parseInt(version_urn.substr(version_urn.lastIndexOf(':') + 1));
+            bootbox.dialog({
+                size: 'large',
+                message: '<div id="bootbox-thoughtmesh-content" class="heading_font"></div>',
+                title: 'ThoughtMesh pages related to ' + tag,
+                className: 'thoughtmesh_bootbox',
+                animate: ((navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true) // Panel is unclickable if true for iOS
+            });
+            var $box = $('.thoughtmesh_bootbox');
+            var $content = $box.find('#bootbox-thoughtmesh-content');
+            $content.append('<h5>Loading...</h5>');
+            $box.find('.modal-body').height(parseInt($(window).height()) * 0.83);
+            $box.find('.bootbox-close-button').empty();
+            $box.find('.modal-title').addClass('heading_font');
+            var document_id = 455; // Temp
+            var group_id = 0;
+            $.getScript('http://thoughtmesh.net/export/outsideLexias.json.php?tag=' + encodeURIComponent(tag) + '&documentid=' + document_id + '&groupid=' + group_id + '&external=1&time=' + $.now(), function() {
+                outsideLexiasFun();
+                if ('undefined' == typeof(outsideLexiasObj)) {
+                    alert('Something went wrong attempting to get tag information from ThoughtMesh. Please try again');
+                    return false;
+                }
+                $content.empty();
+                var $container = $('<div />').addClass('container-fluid').appendTo($content);
+                $('<div>Excerpts Here</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
+                var $internal = $('<div />').addClass('row').appendTo($container);
+                for (var j in obj.internal) {
+                    var lexias = {};
+                    for (var k in obj.internal[j].lexias) {
+                        if (-1 == obj.internal[j].lexias[k].tags.indexOf(tag)) continue;
+                        lexias[k] = obj.internal[j].lexias[k];
+                    };
+                    if ($.isEmptyObject(lexias)) continue;
+                    $('<div></div>').appendTo($internal).html(obj.internal[j].author + ',&nbsp;"<a href="' + obj.internal[j].url + '" target="_blank">' + obj.internal[j].title + '</a>"').addClass('col-md-12 tm-header');
+                    for (var k in lexias) {
+                    	if (opts.page_id==lexias[k].lexiaId) continue;
+                        $('<div></div>').appendTo($internal).html('<a href="' + lexias[k].url + ((lexias[k].anchor.length)?'#'+lexias[k].anchor:'') + '" target="_blank">' + lexias[k].heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
+                        $('<div></div>').appendTo($internal).html(lexias[k].excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                    }
+                };
+                if ($internal.is(':empty')) {
+                    $('<div>There are no related pages for this tag in this Scalar book.<br /><br /></div>').appendTo($internal).addClass('col-md-12');
+                };
+                $('<div>Excerpts Out</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
+                var $external = $('<div />').addClass('row').appendTo($container);
+                if ($.isEmptyObject(outsideLexiasObj)) $('<div>There are outside pages for this tag.</div>').appendTo($external).addClass('col-md-12');
+                for (var j in outsideLexiasObj) {
+                    var entry = outsideLexiasObj[j];
+                    $('<div></div>').appendTo($external).html(entry.author + ',&nbsp;"<a href="' + entry.url + '" target="_blank">' + entry.title + '</a>"').addClass('col-md-12 tm-header');
+                    for (var k in entry['lexias']) {
+                        var lexia = entry['lexias'][k];
+                        $('<div></div>').appendTo($external).html('<a href="' + entry.url + ((lexia.anchor.length)?'#'+lexia.anchor:'') + '" target="_blank">' + lexia.heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
+                        $('<div></div>').appendTo($external).html(lexia.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                    }
+                };
+                $('<div class="row">&nbsp;</div>').appendTo($container);
+            });
         };
 
+        // localStorage not supported
+        if ("undefined" == typeof(Storage)) {
+            $wrapper.append('<div class="row"><div class="col-xs-10 col-xs-offset-2">This browser does not support localStorage and therefore doesn\'t support this plugin.</div></div>');
+            return;
+        };
+        // Go ahead and generate if it hasn't happened already
+        if ($.isEmptyObject(localStorage[opts.namespace]) || 'undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId) {
+            if (!$.isEmptyObject(localStorage[opts.namespace])) localStorage.removeItem(opts.namespace);
+            $.fn.thoughtmesh.setInternalData({
+                callback: function(obj) {
+                    $.fn.thoughtmesh.setExternalData({
+                        'documentId': obj.documentId,
+                        'tags': obj.tags,
+                        callback: function() {
+                            $this.thoughtmesh(options);
+                        }
+                    });
+                }
+            });
+            return;
+        };
+        // Get data object
+        var obj = JSON.parse(localStorage[opts.namespace]);
+        if ($.isEmptyObject(obj) || 'undefined' == typeof(obj.external) || 'undefined' == typeof(obj.internal)) {
+            alert('ThoughtMesh storage object formatted incorrectly')
+            return; // No data, so don't draw the plugin
+        };
+
+        // Plugin shell
         var $wrapper = $('<div class="tm_footer container-fluid"><div class="tm_logo caption_font">ThoughtMesh &nbsp; <a href="javascript:void(null);" class="glyphicon glyphicon-question-sign" title="What is ThoughtMesh?"></a></div></div>').appendTo($this);
-        var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-5 col-xs-8 col-sm-6'><div class=\"tm-header\">Related documents</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
+        if ($.isEmptyObject(obj.external)) {
+            var $header = $('<div class="row"><div class="col-xs-12 tm-no-match">Unfortunately, no pages in the ThoughtMesh network match\ the tags for this Scalar book.</div></div>').appendTo($wrapper);
+        } else {
+            var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-6 col-sm-6 col-xs-8'><div class=\"tm-header\">Related documents</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
+        };
         $wrapper.find('.glyphicon:first').click(function() {
             bootbox.dialog({
-                message: '<p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Phasellus tempus tellus in aliquet gravida. Nulla consequat fringilla pharetra. Phasellus feugiat, dolor nec pulvinar vulputate, felis erat tincidunt elit, ac vulputate lectus arcu a urna. Phasellus sed convallis quam. Aenean vel pretium felis. Nam massa nisl, vulputate sed dapibus nec, tristique eu nisi.</p><form class="to_tm_button" action="http://thoughtmesh.net"><button class="btn btn-primary" type="submit">ThoughtMesh home page</button></form>',
+                message: '<p>ThoughtMesh is an unusual model for publishing and discovering scholarly papers online. It gives readers a tag-based navigation system that uses keywords to connect excerpts of essays published on different Web sites.</p><p>Add your Scalar book to the mesh, and ThoughtMesh gives readers a tag cloud that enables nonlinear access to text excerpts. You can navigate across excerpts both within the original essay and from related essays distributed across the mesh.</p>By clicking tags in the ThoughtMesh plugin you can view a list of excerpts of other pages of this book or of other articles similarly tagged, and jump right to one of those sections.</p><form class="to_tm_button" action="http://thoughtmesh.net" target="_blank"><button class="btn btn-primary" type="submit">ThoughtMesh home page</button></form>',
                 title: 'What is ThoughtMesh?',
                 className: 'thoughtmesh_bootbox',
-                animate: ( (navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true )// Panel is unclickable if true for iOS
+                animate: ((navigator.userAgent.match(/(iPod|iPhone|iPad)/)) ? false : true) // Panel is unclickable if true for iOS
             });
-        	$(this).blur();
+            $(this).blur();
         });
-        for (var i in results) {
-            var $row = $("<div class='row'><div class='tm-tag col-md-2 col-sm-2 col-xs-4'></div><div class='tm-article col-md-5 col-xs-8 col-sm-6'></div><div class='tm-key col-md-4 col-sm-4 hidden-xs'></div></div>").appendTo($wrapper);
+
+        // List most relevant articles and their tags
+        for (var i in obj.external) {
+            var $row = $('<div class="row"><div class="tm-tag col-md-2 col-sm-2 col-xs-4"></div><div class="tm-article col-md-6 col-sm-6 col-xs-8"></div><div class="tm-key col-md-4 col-sm-4 hidden-xs"></div></div>').appendTo($wrapper);
             var $article = $row.children('.tm-article:first');
             // Author
-            if ('undefined' != typeof(results[i].author)) {
-                $("<span class='tm-author'></span>").html(results[i].author+',&nbsp;').appendTo($article);
-            }
+            $("<span class='tm-author'></span>").html(obj.external[i].author + ',&nbsp;').appendTo($article);
             // Title
-            $("<span class='tm-text'></span>").html(results[i].text).appendTo($article);
+            $('<a href="' + obj.external[i].url + '" target="_blank" class="tm-text"></a>').html(obj.external[i].title).appendTo($article);
             // Tags
-            $row.children('.tm-tag').html(('<span class="glyphicon glyphicon-tag"></span>').repeat(results[i].keys.length));
+            var their_tags = obj.external[i].tags;
+            for (var j in obj.external[i].matched_tags) {
+                var $glyph = $('<a href="javascript:void(null);" class="glyphicon glyphicon-tag" data-toggle="tooltip" data-placement="top" title="' + obj.external[i].matched_tags[j] + '"></a>').appendTo($row.children('.tm-tag'));
+                $glyph.data('tm-tag', obj.external[i].matched_tags[j]);
+            };
+            $row.children('.tm-tag').children().click(tagModal);
             // Keywords
             var keyhtml = '';
             $keys = $row.children('.tm-key');
-            for (var j = 0; j < results[i].keys.length; j++) {
+            for (var j = 0; j < their_tags.length; j++) {
                 if (0 != j) $keys.append(',&nbsp;');
-                var $key = $('<span></span>');
-                $key.addClass('tm-link');
-                $key.html(results[i].keys[j]);
-                $key.data('tm-tag',results[i].keys[j]);
+                var $key = $('<a href="javascript:void(null);" class="tm-link"></a>');
+                $key.html(their_tags[j]);
+                $key.data('tm-tag', their_tags[j]);
                 $key.appendTo($keys);
             };
+            $keys.children().click(tagModal);
+        };
+
+        $('[data-toggle="tooltip"]').tooltip();
+        $.getScript($('link#approot').attr('href') + 'plugins/thoughtmesh/lib/bootbox.min.js', function(data, textStatus, jqxhr) {});
+
+    }; // $.fn.thoughtmesh
+
+    $.fn.thoughtmesh.setInternalData = function(options) {
+        var opts = $.extend({}, defaults, options);
+        var parent = opts.parent;
+        if ('undefined' == typeof(opts.parent) && $('link#parent').length) {
+            parent = $('link#parent').attr('href');
+        } else if ('undefined' == typeof(opts.parent)) {
+            alert('Can\'t find "parent" string in order to set internal data');
+            return;
+        };
+        if ('undefined' == typeof(opts.skip_words)) {
+            opts.skip_words = ['is', 'through', 'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'];
+        };
+        if ('undefined' == typeof(opts.book_name)) {
+            opts.book_name = ($('[property="og:site_name"]').length) ? $('[property="og:site_name"]').attr('content') : '(No title)';
+        };
+        if ('undefined' == typeof(opts.book_id)) {
+            opts.book_id = ($('link#book_id').length) ? parseInt($('link#book_id').attr('href')) : 0;
+        };
+        if ('undefined' == typeof(opts.book_authors)) {
+            opts.book_authors = [];
+            $('[rel="sioc:has_owner"]').each(function() {
+                var user_uri = $(this).attr('href');
+                user_uri = user_uri.substr(0, user_uri.indexOf('#'));
+                var fullname = $('[resource="' + user_uri + '"]:first').children('[property="foaf:name"]').text();
+                opts.book_authors.push(fullname);
+            });
+            opts.book_authors = opts.book_authors.join(',');
+        };
+        if ($.isEmptyObject(localStorage[opts.namespace])) {
+            var obj = {
+                'bookId': opts.book_id,
+                'documentGroups': {},
+                'internal': {},
+                'external': {}
+            };
+        } else {
+            var obj = JSON.parse(localStorage[opts.namespace]);
+        };
+        var book_urn = 'urn:scalar:book:' + opts.book_id;
+
+        var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
+            allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('');
+            var tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+            var commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+            return input.replace(commentsAndPhpTags, '').replace(tags, function($0, $1) {
+                return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
+            });
         }
-        $('.tm-link').click(openModal);
-        $('.tm-tag').wrapInner('<div style="float:right"></div>');
-    }
-}( jQuery ));
+
+        var getLexiaTags = function(text) {
+            // Get word count
+            var words = text.match(/\b\w+\b/g);
+            var counts = {};
+            for (var i = 0, len = words.length; i < len; i++) {
+                var word = words[i].toLowerCase();
+                if (word.length < 4) continue;  // magic number
+                if (-1 != opts.skip_words.indexOf(word)) continue;
+                counts[word] = (counts[word] || 0) + 1;
+            };
+            // Get top words
+            var sortable = [];
+            for (var word in counts) {
+                sortable.push([word, counts[word]]);
+            };
+            if (!sortable.length) return sortable;
+            sortable.sort(function(a, b) {
+                return b[1] - a[1]
+            });
+            var tags = sortable.slice(0, 3);
+            var to_return = [];
+            for (var j = 0; j < tags.length; j++) {
+                to_return.push(tags[j][0]);
+            }
+            return to_return;
+        };
+
+        var getDocumentTags = function(lexias) {
+            // Get word count
+            var counts = {};
+            for (var i = 0; i < lexias.length; i++) {
+                for (var j = 0; j < lexias[i].tags.length; j++) {
+                    var word = lexias[i].tags[j];
+                    if (-1 != opts.skip_words.indexOf(word)) continue;
+                    counts[word] = (counts[word] || 0) + 1;
+                };
+            };
+            // Get top words
+            var sortable = [];
+            for (var word in counts) {
+                sortable.push([word, counts[word]]);
+            };
+            if (!sortable.length) return sortable;
+            sortable.sort(function(a, b) {
+                return b[1] - a[1]
+            });
+            var tags = sortable.slice(0, 3);
+            var to_return = [];
+            for (var j = 0; j < tags.length; j++) {
+                to_return.push(tags[j][0]);
+            }
+            return to_return;
+        };
+
+        obj.internal[book_urn] = {
+            "documentId": opts.book_id,
+            "title": opts.book_name,
+            "author": opts.book_authors,
+            "url": parent,
+            "tags": [],
+            "lexias": []
+        };
+
+        if ('/' != parent.substr(parent.length - 1, 1)) parent += '/';
+        var url = parent + 'rdf/instancesof/page?format=json';
+        $.getJSON(url, function(json) {
+            if ($.isEmptyObject(json)) return;
+            for (var uri in json) {
+                // Get lexia text
+                if ('undefined' == typeof(json[uri]['http://rdfs.org/sioc/ns#content'])) continue;
+                var text = strip_tags(json[uri]['http://rdfs.org/sioc/ns#content'][0].value);
+                var title = json[uri]['http://purl.org/dc/terms/title'][0].value;
+                var version_urn = json[uri]['http://scalar.usc.edu/2012/01/scalar-ns#urn'][0].value;
+                var version_id = parseInt(version_urn.substr(version_urn.lastIndexOf(':') + 1));
+                var page_uri = json[uri]['http://purl.org/dc/terms/isVersionOf'][0].value;
+                var page_urn = json[page_uri]['http://scalar.usc.edu/2012/01/scalar-ns#urn'][0].value
+                var page_id = parseInt(page_urn.substr(page_urn.lastIndexOf(':') + 1));
+                var tags = getLexiaTags(text);
+                if (!tags.length) continue;
+                var lexia = {
+                    "lexiaId": version_id,
+                    "anchor": "",
+                    "url": page_uri,
+                    "heading": title,
+                    "excerpt": ((text.length > 100) ? text.substr(0, 100) + ' ...' : text),
+                    "tags": tags
+                };
+                obj.internal[book_urn].lexias.push(lexia);
+            };
+            obj.internal[book_urn].tags = getDocumentTags(obj.internal[book_urn].lexias);
+            localStorage[opts.namespace] = JSON.stringify(obj);
+            if ('undefined' != typeof(opts.callback)) {
+                opts.callback({
+                    'documentId': obj.internal[book_urn].documentId,
+                    'tags': obj.internal[book_urn].tags
+                });
+            };
+        });
+    }; // $.fn.thoughtmesh.setInternalData
+
+    $.fn.thoughtmesh.setExternalData = function(options, next) {
+        var opts = $.extend({}, defaults, options);
+        var document_id = opts.documentId;
+        var group_id = 0; // Temp
+        var tags = opts.tags;
+        if ('undefined' == typeof(next)) next = 3;
+        var tags_to_send = [];
+        switch (next) {
+            case 3:
+                tags_to_send = tags.slice();
+                next = 2.1;
+                break;
+            case 2.1:
+                tags_to_send = tags.slice(0, 2);
+                next = 2.2;
+                break;
+            case 2.2:
+                tags_to_send = tags.slice(1, 3);
+                next = 2.3;
+                break;
+            case 2.3:
+                tags_to_send = [tags[0], tags[2]];
+                next = 1.1;
+                break;
+            case 1.1:
+                tags_to_send = [tags[0]];
+                next = 1.2;
+                break;
+            case 1.2:
+                tags_to_send = [tags[1]];
+                next = 1.3;
+                break;
+            case 1.3:
+                tags_to_send = [tags[2]];
+                next = 0;
+                break;
+        };
+        $.getScript('http://thoughtmesh.net/export/outsideLexias.json.php?tag=' + encodeURIComponent(tags_to_send.join(',')) + '&documentid=' + document_id + '&groupid=' + group_id + '&external=1&time=' + $.now(), function() {
+            outsideLexiasFun();
+            if ('undefined' == typeof(outsideLexiasObj)) {
+                alert('Something went wrong attempting to get tag information from ThoughtMesh. Please try again');
+                return false;
+            };
+            if ($.isEmptyObject(localStorage[opts.namespace])) {
+                var obj = {
+                    'bookId': opts.document_id,
+                    'documentGroups': documentGroups,
+                    'internal': {},
+                    'external': {}
+                };
+            } else {
+                var obj = JSON.parse(localStorage[opts.namespace]);
+            };
+            if ($.isEmptyObject(obj.documentGroups)) obj.documentGroups = documentGroups;
+            for (var j in outsideLexiasObj) {
+                if ('undefined' != typeof(obj.external[j])) continue;
+                obj.external[j] = outsideLexiasObj[j];
+                obj.external[j].tags = tags_to_send.slice();
+                obj.external[j].matched_tags = tags_to_send.slice();
+                if (1==tags_to_send.length) break;  // For now, only save one document per single tag
+            };
+            localStorage[opts.namespace] = JSON.stringify(obj);
+            if (0 != next) {
+                $.fn.thoughtmesh.setExternalData(options, next);
+            } else if ('undefined' != typeof(opts.callback)) {
+                opts.callback();
+            }
+        });
+    }; // $.fn.thoughtmesh.setExternalData
+}(jQuery));

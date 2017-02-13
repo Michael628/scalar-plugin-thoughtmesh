@@ -26,24 +26,31 @@
 .to_tm_button {
 	padding:12px 0px 12px 0px;
 }
+.tm-no-match {
+	font-size:13px;
+	padding-top:6px;
+	text-align:center;
+}
 .tm-header {
 	color:#888888;
 }
-.tm-article {
-	white-space:nowrap;
-	overflow:hidden;
-}
 .tm-tag {
 	color:#26d19d;
+	text-align:right;
 }
 .tm-tag .glyphicon {
 	top:2px;
+	cursor:pointer;
+	color:#26d19d;
+}
+.tm-tag .glyphicon:hover {
+	text-decoration:none;
 }
 .tm-link, .tm-text {
 	cursor:pointer; color:#1d9b76; 
 }
 .tm-link:hover, .tm-text:hover {
-    text-decoration:underline;
+    text-decoration:underline; color:#1d9b76; 
 }
 
 /* Modal */

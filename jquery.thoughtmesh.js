@@ -6,6 +6,15 @@
     var defaults = {
         'namespace': 'thoughtmesh'
     };
+    
+    var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
+        allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('');
+        var tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+        var commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
+        return input.replace(commentsAndPhpTags, '').replace(tags, function($0, $1) {
+            return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
+        });
+    }
 
     $.fn.thoughtmesh = function(options) {
         var $this = $(this);
@@ -48,8 +57,9 @@
                 }
                 $content.empty();
                 var $container = $('<div />').addClass('container-fluid').appendTo($content);
-                $('<div>Excerpts Here</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
-                var $internal = $('<div />').addClass('row').appendTo($container);
+                var $tabs = $('<ul class="nav nav-tabs" role="tablist"><li role="presentation" class="active"><a href="#out" aria-controls="out" role="tab" data-toggle="tab">Excerpts out</a></li><li role="presentation"><a href="#here" aria-controls="here" role="tab" data-toggle="tab">Excerpts here</a></li></ul>').appendTo($container);
+                var $tab_content = $('<div class="tab-content"><div role="tabpanel" class="tab-pane active" id="out"></div><div role="tabpanel" class="tab-pane" id="here"></div></div>').appendTo($container);
+                var $internal = $('<div />').addClass('row').appendTo($tab_content.find('div:last'));
                 for (var j in obj.internal) {
                     var lexias = {};
                     for (var k in obj.internal[j].lexias) {
@@ -61,14 +71,13 @@
                     for (var k in lexias) {
                     	if (opts.page_id==lexias[k].lexiaId) continue;
                         $('<div></div>').appendTo($internal).html('<a href="' + lexias[k].url + ((lexias[k].anchor.length)?'#'+lexias[k].anchor:'') + '" target="_blank">' + lexias[k].heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
-                        $('<div></div>').appendTo($internal).html(lexias[k].excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                        $('<div></div>').appendTo($internal).html(strip_tags(lexias[k].excerpt)).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
                     }
                 };
                 if ($internal.is(':empty')) {
                     $('<div>There are no related pages for this tag in this Scalar book.<br /><br /></div>').appendTo($internal).addClass('col-md-12');
                 };
-                $('<div>Excerpts Out</div>').appendTo($container).addClass('h4 heading_font col-md-12').wrap($('<div />').addClass('row'));
-                var $external = $('<div />').addClass('row').appendTo($container);
+                var $external = $('<div />').addClass('row').appendTo($tab_content.find('div:first'));
                 if ($.isEmptyObject(outsideLexiasObj)) $('<div>There are outside pages for this tag.</div>').appendTo($external).addClass('col-md-12');
                 for (var j in outsideLexiasObj) {
                     var entry = outsideLexiasObj[j];
@@ -76,7 +85,7 @@
                     for (var k in entry['lexias']) {
                         var lexia = entry['lexias'][k];
                         $('<div></div>').appendTo($external).html('<a href="' + entry.url + ((lexia.anchor.length)?'#'+lexia.anchor:'') + '" target="_blank">' + lexia.heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
-                        $('<div></div>').appendTo($external).html(lexia.excerpt).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                        $('<div></div>').appendTo($external).html(strip_tags(lexia.excerpt)).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
                     }
                 };
                 $('<div class="row">&nbsp;</div>').appendTo($container);
@@ -116,7 +125,7 @@
         if ($.isEmptyObject(obj.external)) {
             var $header = $('<div class="row"><div class="col-xs-12 tm-no-match">Unfortunately, no pages in the ThoughtMesh network match\ the tags for this Scalar book.</div></div>').appendTo($wrapper);
         } else {
-            var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-4'></div><div class='col-md-6 col-sm-6 col-xs-8'><div class=\"tm-header\">Related documents</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
+            var $header = $("<div class='row'><div class='col-md-2 col-sm-2 col-xs-2'></div><div class='col-md-6 col-sm-6 col-xs-10'><div class=\"tm-header\">Related documents</div></div><div class='col-md-4 col-sm-4 hidden-xs'><div class=\"tm-header\">Related keywords</div></div></div>").appendTo($wrapper);
         };
         $wrapper.find('.glyphicon:first').click(function() {
             bootbox.dialog({
@@ -130,7 +139,7 @@
 
         // List most relevant articles and their tags
         for (var i in obj.external) {
-            var $row = $('<div class="row"><div class="tm-tag col-md-2 col-sm-2 col-xs-4"></div><div class="tm-article col-md-6 col-sm-6 col-xs-8"></div><div class="tm-key col-md-4 col-sm-4 hidden-xs"></div></div>').appendTo($wrapper);
+            var $row = $('<div class="row"><div class="tm-tag col-md-2 col-sm-2 col-xs-2"></div><div class="tm-article col-md-6 col-sm-6 col-xs-10"></div><div class="tm-key col-md-4 col-sm-4 hidden-xs"></div></div>').appendTo($wrapper);
             var $article = $row.children('.tm-article:first');
             // Author
             $("<span class='tm-author'></span>").html(obj.external[i].author + ',&nbsp;').appendTo($article);
@@ -200,15 +209,6 @@
             var obj = JSON.parse(localStorage[opts.namespace]);
         };
         var book_urn = 'urn:scalar:book:' + opts.book_id;
-
-        var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
-            allowed = (((allowed || '') + '').toLowerCase().match(/<[a-z][a-z0-9]*>/g) || []).join('');
-            var tags = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-            var commentsAndPhpTags = /<!--[\s\S]*?-->|<\?(?:php)?[\s\S]*?\?>/gi;
-            return input.replace(commentsAndPhpTags, '').replace(tags, function($0, $1) {
-                return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
-            });
-        }
 
         var getLexiaTags = function(text) {
             // Get word count

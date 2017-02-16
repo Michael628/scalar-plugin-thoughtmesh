@@ -180,7 +180,7 @@
             return;
         };
         if ('undefined' == typeof(opts.skip_words)) {
-            opts.skip_words = ['is', 'through', 'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'];
+            opts.skip_words = ['nbsp', 'is', 'through', 'the', 'be', 'to', 'of', 'and', 'a', 'in', 'that', 'have', 'i', 'it', 'for', 'not', 'on', 'with', 'he', 'as', 'you', 'do', 'at', 'this', 'but', 'his', 'by', 'from', 'they', 'we', 'say', 'her', 'she', 'or', 'an', 'will', 'my', 'one', 'all', 'would', 'there', 'their', 'what', 'so', 'up', 'out', 'if', 'about', 'who', 'get', 'which', 'go', 'me', 'when', 'make', 'can', 'like', 'time', 'no', 'just', 'him', 'know', 'take', 'people', 'into', 'year', 'your', 'good', 'some', 'could', 'them', 'see', 'other', 'than', 'then', 'now', 'look', 'only', 'come', 'its', 'over', 'think', 'also', 'back', 'after', 'use', 'two', 'how', 'our', 'work', 'first', 'well', 'way', 'even', 'new', 'want', 'because', 'any', 'these', 'give', 'day', 'most', 'us'];
         };
         if ('undefined' == typeof(opts.book_name)) {
             opts.book_name = ($('[property="og:site_name"]').length) ? $('[property="og:site_name"]').attr('content') : '(No title)';
@@ -211,8 +211,11 @@
         var book_urn = 'urn:scalar:book:' + opts.book_id;
 
         var getLexiaTags = function(text) {
+        	if (-1!=window.location.href.indexOf('works/caa/')) return ['art','performance','media'];  // Temp for demo
             // Get word count
+        	if (!text.length) return text;
             var words = text.match(/\b\w+\b/g);
+            if (!words.length) return [];
             var counts = {};
             for (var i = 0, len = words.length; i < len; i++) {
                 var word = words[i].toLowerCase();
@@ -370,7 +373,8 @@
                 obj.external[j] = outsideLexiasObj[j];
                 obj.external[j].tags = tags_to_send.slice();
                 obj.external[j].matched_tags = tags_to_send.slice();
-                if (1==tags_to_send.length && count > 0) break;  // For now, only save two documents per single tag
+                if (2==tags_to_send.length && count > 0) break;  // For now, cap the number of results per match
+                if (1==tags_to_send.length && count == 0) break;  // For now, cap the number of results per match
                 count++;
             };
             localStorage[opts.namespace] = JSON.stringify(obj);

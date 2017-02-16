@@ -364,12 +364,14 @@
                 var obj = JSON.parse(localStorage[opts.namespace]);
             };
             if ($.isEmptyObject(obj.documentGroups)) obj.documentGroups = documentGroups;
+            var count = 0;
             for (var j in outsideLexiasObj) {
                 if ('undefined' != typeof(obj.external[j])) continue;
                 obj.external[j] = outsideLexiasObj[j];
                 obj.external[j].tags = tags_to_send.slice();
                 obj.external[j].matched_tags = tags_to_send.slice();
-                if (1==tags_to_send.length) break;  // For now, only save one document per single tag
+                if (1==tags_to_send.length && count > 0) break;  // For now, only save two documents per single tag
+                count++;
             };
             localStorage[opts.namespace] = JSON.stringify(obj);
             if (0 != next) {

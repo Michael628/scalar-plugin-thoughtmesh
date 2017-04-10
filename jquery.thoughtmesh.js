@@ -4,7 +4,8 @@
 (function($) {
 
     var defaults = {
-        'namespace': 'thoughtmesh'
+        'namespace': 'thoughtmesh',
+        'parent':'scalar'
     };
     
     var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
@@ -15,6 +16,7 @@
             return allowed.indexOf('<' + $1.toLowerCase() + '>') > -1 ? $0 : ''
         });
     }
+
 
     $.fn.thoughtmesh = function(options) {
         var $this = $(this);

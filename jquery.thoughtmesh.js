@@ -6,7 +6,9 @@
     var defaults = {
         'namespace': 'thoughtmesh',
         'platform':'scalar',
-        'render':true
+        'render':true,
+        'buildInternal':true,
+        'externalTags':[]
     };
     
     var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
@@ -35,10 +37,10 @@
             	var urn = $('link#urn').attr('href');
                 opts.page_id = ($('link#urn').length) ? parseInt(urn.substr(urn.lastIndexOf(':')+1)) : 0;
             };
-        };
-        // !!! How will modals be handled in WP?
+        } else {
+            opts.book_id = Math.floor(Math.random()*1000)+1;
+        }
         // List excerpts here and there based on a tag
-        // $this.data('tm-tag')
         var tagModal = function() {
             var $this = $(this);
             var tag = $this.data('tm-tag');
@@ -75,25 +77,31 @@
                 var $tabs = $('<ul class="nav nav-tabs" role="tablist"><li role="presentation" class="active"><a href="#out" aria-controls="out" role="tab" data-toggle="tab">Excerpts out</a></li><li role="presentation"><a href="#here" aria-controls="here" role="tab" data-toggle="tab">Excerpts here</a></li></ul>').appendTo($container);
                 var $tab_content = $('<div class="tab-content"><div role="tabpanel" class="tab-pane active" id="out"></div><div role="tabpanel" class="tab-pane" id="here"></div></div>').appendTo($container);
 
-                // builds table of data from text internal to the platform related to tag
-                var $internal = $('<div />').addClass('row').appendTo($tab_content.find('div:last'));
-                for (var j in obj.internal) {
-                    var lexias = {};
-                    for (var k in obj.internal[j].lexias) {
-                        if (-1 == obj.internal[j].lexias[k].tags.indexOf(tag)) continue;
-                        lexias[k] = obj.internal[j].lexias[k];
-                    };
-                    if ($.isEmptyObject(lexias)) continue;
-                    $('<div></div>').appendTo($internal).html(obj.internal[j].author + ',&nbsp;"<a href="' + obj.internal[j].url + '" target="_blank">' + obj.internal[j].title + '</a>"').addClass('col-md-12 tm-header');
-                    for (var k in lexias) {
-                    	if (opts.page_id==lexias[k].lexiaId) continue;
-                        $('<div></div>').appendTo($internal).html('<a href="' + lexias[k].url + ((lexias[k].anchor.length)?'#'+lexias[k].anchor:'') + '" target="_blank">' + lexias[k].heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
-                        $('<div></div>').appendTo($internal).html(strip_tags(lexias[k].excerpt)).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                if(opts.buildInternal) {
+                    // builds table of data from text internal to the platform related to tag
+                    var $internal = $('<div />').addClass('row').appendTo($tab_content.find('div:last'));
+                    for (var j in obj.internal) {
+                        var lexias = {};
+                        for (var k in obj.internal[j].lexias) {
+                            if (-1 == obj.internal[j].lexias[k].tags.indexOf(tag)) continue;
+                            lexias[k] = obj.internal[j].lexias[k];
+                        };
+                        if ($.isEmptyObject(lexias)) continue;
+                        $('<div></div>').appendTo($internal).html(obj.internal[j].author + ',&nbsp;"<a href="' + obj.internal[j].url + '" target="_blank">' + obj.internal[j].title + '</a>"').addClass('col-md-12 tm-header');
+                        for (var k in lexias) {
+                        	if (opts.page_id==lexias[k].lexiaId) continue;
+                            $('<div></div>').appendTo($internal).html('<a href="' + lexias[k].url + ((lexias[k].anchor.length)?'#'+lexias[k].anchor:'') + '" target="_blank">' + lexias[k].heading + '</a>').addClass('col-md-11 col-md-offset-1 tm-anchor body_font');
+                            $('<div></div>').appendTo($internal).html(strip_tags(lexias[k].excerpt)).addClass('col-md-11 col-md-offset-1 tm-excerpt body_font');
+                        }
                     }
-                };
-                if ($internal.is(':empty')) {
-                    $('<div>There are no related pages for this tag in this Scalar book.<br /><br /></div>').appendTo($internal).addClass('col-md-12');
-                };
+                    if ($internal.is(':empty')) {
+                        $('<div>There are no related pages for this tag in this document.<br /><br /></div>').appendTo($internal).addClass('col-md-12');
+                    };
+                } else {
+                    // If internal data is not being processed, remove internal tab from modal
+                    $tabs.children('li:eq(1)').remove();
+                }
+                    
 
                 // builds table of external tag-related data (from thoughtmesh)
                 var $external = $('<div />').addClass('row').appendTo($tab_content.find('div:first'));
@@ -111,38 +119,7 @@
             });
         };
 
-        // localStorage not supported
-        if ("undefined" == typeof(Storage)) {
-            $wrapper.append('<div class="row"><div class="col-xs-10 col-xs-offset-2">This browser does not support localStorage and therefore doesn\'t support this plugin.</div></div>');
-            return;
-        };
-        // !!! directly references bookId (why?), must generalize
-        // Go ahead and generate if it hasn't happened already
-        if ($.isEmptyObject(localStorage[opts.namespace]) || 'undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId) {
-            if (!$.isEmptyObject(localStorage[opts.namespace])) localStorage.removeItem(opts.namespace);
-            $.fn.thoughtmesh.setInternalData({
-                callback: function(obj) {
-                    $.fn.thoughtmesh.setExternalData({
-                        'documentId': obj.documentId,
-                        'tags': obj.tags,
-                        callback: function() {
-                            $this.thoughtmesh(options);
-                        }
-                    });
-                }
-            });
-            // Kills this instance of thoughtmesh(). Code continues from second nested Callback above.
-            return;
-        };
-        // Get data object
-        var obj = JSON.parse(localStorage[opts.namespace]);
-        if ($.isEmptyObject(obj) || 'undefined' == typeof(obj.external) || 'undefined' == typeof(obj.internal)) {
-            alert('ThoughtMesh storage object formatted incorrectly')
-            return; // No data, so don't draw the plugin
-        };
-        // !!!WP Skip rendering?
-        // Decide whether to render html or just send raw data to platform
-        if ('undefined' == typeof(obj.render) || ('undefined' != typeof(obj.render) && obj.render)) {
+        var renderScalar = function() {
             // Plugin shell
             var $wrapper = $('<div class="tm_footer container-fluid"><div class="tm_logo caption_font">ThoughtMesh &nbsp; <a href="javascript:void(null);" class="glyphicon glyphicon-question-sign" title="What is ThoughtMesh?"></a></div></div>').appendTo($this);
             if ($.isEmptyObject(obj.external)) {
@@ -187,9 +164,62 @@
                     $key.appendTo($keys);
                 };
                 $keys.children().click(tagModal);
-            };
-        }; else { //if !opts.render
-            // Raw data can be grabbed from localSrorage
+            }
+        }
+
+        // localStorage not supported
+        if ("undefined" == typeof(Storage)) {
+            $wrapper.append('<div class="row"><div class="col-xs-10 col-xs-offset-2">This browser does not support localStorage and therefore doesn\'t support this plugin.</div></div>');
+            return;
+        };
+        // !!! directly references bookId (why?), must generalize
+        // Go ahead and generate if it hasn't happened already
+        if ($.isEmptyObject(localStorage[opts.namespace]) || 'undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId) {
+            if (!$.isEmptyObject(localStorage[opts.namespace])) localStorage.removeItem(opts.namespace);
+
+            if(opts.buildInternal) {
+                $.fn.thoughtmesh.setInternalData({
+                    callback: function(obj) {
+                        $.fn.thoughtmesh.setExternalData({
+                            'documentId': obj.documentId,
+                            'tags': obj.tags,
+                            callback: function() {
+                                $this.thoughtmesh(options);
+                            }
+                        });
+                    }
+                });
+            } else {
+                $.fn.thoughtmesh.setExternalData({
+                    'documentId': opts.book_id,
+                    'tags': options.externalTags,
+                    callback: function() {
+                        $this.thoughtmesh(options);
+                    }
+                 });
+            }
+            // Kills this instance of thoughtmesh(). Code continues from Callback above.
+            return;
+        };
+        // Get data object
+        var obj = JSON.parse(localStorage[opts.namespace]);
+        if ($.isEmptyObject(obj) || 'undefined' == typeof(obj.external) || 'undefined' == typeof(obj.internal)) {
+            alert('ThoughtMesh storage object formatted incorrectly')
+            return; // No data, so don't draw the plugin
+        };
+
+        // Decide whether to render html or just send raw data to platform
+        if ('undefined' == typeof(opts.render) || opts.render) {
+            switch(opts.platform) {
+                case 'scalar':
+                    renderScalar();
+                    break;
+                case 'wordpress':
+                    renderWordpress();
+                    break;
+            }
+        } else { //if !opts.render
+            // Raw data can be grabbed from localStorage
             return;
         }
         $('[data-toggle="tooltip"]').tooltip();
@@ -200,7 +230,6 @@
 
     $.fn.thoughtmesh.setInternalData = function(options) {
         var opts = $.extend({}, defaults, options);
-        // !!!WP needs to designate "options.parent" - The uri of the platform's text data
         var parent = opts.parent;
         if ('undefined' == typeof(opts.parent) && $('link#parent').length) {
             parent = $('link#parent').attr('href');
@@ -240,9 +269,10 @@
         };
         var book_urn = 'urn:scalar:book:' + opts.book_id;
 
-        // (Once fully implemented) returns most common tags from text provided
+        // returns most common tags from text provided
         var getLexiaTags = function(text) {
-        	if (-1!=window.location.href.indexOf('works/caa/')) return ['art','performance','media'];  // Temp for demo
+        	// if (-1!=window.location.href.indexOf('lireneocalhost')) 
+                return ['art','performance','media'];  // Temp for demo
             // Get word count
         	if (!text.length) return text;
             var words = text.match(/\b\w+\b/g);
@@ -305,7 +335,8 @@
             "author": opts.book_authors,
             "url": parent,
             "tags": [],
-            "lexias": []
+            "lexias": [],
+            "tmp":window.location.href
         };
 
         if ('/' != parent.substr(parent.length - 1, 1)) parent += '/';
@@ -348,13 +379,25 @@
         });
     }; // $.fn.thoughtmesh.setInternalData
 
+    // Builds data from connections through thoughtmesh
     $.fn.thoughtmesh.setExternalData = function(options, next) {
         var opts = $.extend({}, defaults, options);
         var document_id = opts.documentId;
         var group_id = 0; // Temp
+        if('undefined' == opts.tags || opts.tags.length == 0) {
+            if ($.isEmptyObject(localStorage[opts.namespace])) {
+                var obj = {
+                    'bookId': document_id,
+                    'internal': {},
+                    'external': {}
+                };
+                localStorage[opts.namespace] = stringify(obj);
+            }
+            return;
+        }
         var tags = opts.tags;
-        if ('undefined' == typeof(next)) next = 3;
         var tags_to_send = [];
+        if ('undefined' == typeof(next)) next = 3;
         switch (next) {
             case 3:
                 tags_to_send = tags.slice();
@@ -393,7 +436,7 @@
             };
             if ($.isEmptyObject(localStorage[opts.namespace])) {
                 var obj = {
-                    'bookId': opts.document_id,
+                    'bookId': opts.documentId,
                     'documentGroups': documentGroups,
                     'internal': {},
                     'external': {}
@@ -412,6 +455,7 @@
                 if (1==tags_to_send.length && count == 0) break;  // For now, cap the number of results per match
                 count++;
             };
+            // $('.body_copy').append(JSON.stringify(obj));
             localStorage[opts.namespace] = JSON.stringify(obj);
             if (0 != next) {
                 $.fn.thoughtmesh.setExternalData(options, next);

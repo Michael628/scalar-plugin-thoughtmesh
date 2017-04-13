@@ -47,8 +47,8 @@
             var obj = JSON.parse(localStorage[opts.namespace]);
             // !!! Not used currently?
             // !!! scalar specific
-            var version_urn = $('link#urn').attr('href');
-            var version_id = parseInt(version_urn.substr(version_urn.lastIndexOf(':') + 1));
+            // var version_urn = $('link#urn').attr('href');
+            // var version_id = parseInt(version_urn.substr(version_urn.lastIndexOf(':') + 1));
             bootbox.dialog({
                 size: 'large',
                 message: '<div id="bootbox-thoughtmesh-content" class="heading_font"></div>',

@@ -174,7 +174,7 @@
         };
         // !!! directly references bookId (why?), must generalize
         // Go ahead and generate if it hasn't happened already
-        if ($.isEmptyObject(localStorage[opts.namespace]) || 'undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId) {
+        if ($.isEmptyObject(localStorage[opts.namespace]) || (opts.platform == 'scalar' && ('undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId))) {
             if (!$.isEmptyObject(localStorage[opts.namespace])) localStorage.removeItem(opts.namespace);
 
             if(opts.buildInternal) {

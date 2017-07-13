@@ -8,7 +8,8 @@
         'platform':'scalar',
         'render':true,
         'buildInternal':true,
-        'externalTags':[]
+        'externalTags':[],
+        'storageTimeout':10
     };
     
     var strip_tags = function(input, allowed) { // http://locutus.io/php/strings/strip_tags/
@@ -28,6 +29,7 @@
     $.fn.thoughtmesh = function(options) {
         var $this = $(this);
         var opts = $.extend({}, defaults, options);
+
         if(opts.platform == 'scalar') {
             //Pulls defaults for book and page of interest from hidden data on page
             if ('undefined' == typeof(opts.book_id)) {
@@ -174,7 +176,13 @@
         };
         // !!! directly references bookId (why?), must generalize
         // Go ahead and generate if it hasn't happened already
-        if ($.isEmptyObject(localStorage[opts.namespace]) || (opts.platform == 'scalar' && ('undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId) || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId))) {
+
+        var currentTime = ((new Date()).getTime())/1000;
+        if ($.isEmptyObject(localStorage[opts.namespace])
+            || (opts.platform == 'scalar' && ('undefined' == typeof(JSON.parse(localStorage[opts.namespace]).bookId)
+            || opts.book_id != JSON.parse(localStorage[opts.namespace]).bookId))
+            || (currentTime - JSON.parse(localStorage[opts.namespace]).created) > opts.storageTimeout) {
+
             if (!$.isEmptyObject(localStorage[opts.namespace])) localStorage.removeItem(opts.namespace);
 
             if(opts.buildInternal) {
@@ -257,16 +265,19 @@
             });
             opts.book_authors = opts.book_authors.join(',');
         };
+
         if ($.isEmptyObject(localStorage[opts.namespace])) {
             var obj = {
                 'bookId': opts.book_id,
                 'documentGroups': {},
-                'internal': {},
-                'external': {}
-            };
+                    'internal': {},
+                    'external': {}
+                };
+            obj['created'] = ((new Date()).getTime())/1000;
         } else {
             var obj = JSON.parse(localStorage[opts.namespace]);
-        };
+        }
+
         var book_urn = 'urn:scalar:book:' + opts.book_id;
 
         // returns most common tags from text provided
@@ -436,12 +447,13 @@
                 var obj = {
                     'bookId': opts.documentId,
                     'documentGroups': documentGroups,
-                    'internal': {},
-                    'external': {}
-                };
+                        'internal': {},
+                        'external': {}
+                    };
+                obj['created'] = ((new Date()).getTime())/1000;
             } else {
                 var obj = JSON.parse(localStorage[opts.namespace]);
-            };
+            }
             if ($.isEmptyObject(obj.documentGroups)) obj.documentGroups = documentGroups;
             var count = 0;
             for (var j in outsideLexiasObj) {

@@ -189,15 +189,15 @@
                         });
                     }
                 });
-            } else {
-                $.fn.thoughtmesh.setExternalData({
-                    'documentId': opts.book_id,
-                    'tags': options.externalTags,
-                    callback: function() {
-                        $this.thoughtmesh(options);
-                    }
-                 });
             }
+            $.fn.thoughtmesh.setExternalData({
+                'documentId': opts.book_id,
+                'tags': options.externalTags,
+                callback: function() {
+                    $this.thoughtmesh(options);
+                }
+            });
+
             // Kills this instance of thoughtmesh(). Code continues from Callback above.
             return;
         };
@@ -271,8 +271,6 @@
 
         // returns most common tags from text provided
         var getLexiaTags = function(text) {
-        	// if (-1!=window.location.href.indexOf('lireneocalhost')) 
-                return ['art','performance','media'];  // Temp for demo
             // Get word count
         	if (!text.length) return text;
             var words = text.match(/\b\w+\b/g);

@@ -114,20 +114,21 @@ function add_thoughtmesh_essay_fields( $thoughtmesh_essay_id, $thoughtmesh_essay
 }
 
 //Load the Thoughtmesh essay template for single-post viewing
-function include_template_function( $template_path ) {
-    if ( get_post_type() == 'thoughtmesh_essays' ) {
-        if ( is_single() ) {
-            // checks if the file exists in the theme first,
-            // otherwise serve the file from the plugin
-            if ( $theme_file = locate_template( array ( 'single-thoughtmesh_essays.php' ) ) ) {
-                $template_path = $theme_file;
-            } else {
-                $template_path = plugin_dir_path( __FILE__ ) . '/single-thoughtmesh_essays.php';
-            }
-        }
-    }
-    return $template_path;
-}
+//Deprecated by changing to a widget - JPB
+// function include_template_function( $template_path ) {
+//     if ( get_post_type() == 'thoughtmesh_essays' ) {
+//         if ( is_single() ) {
+//             // checks if the file exists in the theme first,
+//             // otherwise serve the file from the plugin
+//             if ( $theme_file = locate_template( array ( 'single-thoughtmesh_essays.php' ) ) ) {
+//                 $template_path = $theme_file;
+//             } else {
+//                 $template_path = plugin_dir_path( __FILE__ ) . '/single-thoughtmesh_essays.php';
+//             }
+//         }
+//     }
+//     return $template_path;
+// }
 
 //Add javascript and CSS to the queue for front end posts
 function thoughtmesh_register_scripts(){
@@ -151,6 +152,74 @@ function thoughtmesh_register_admin_scripts($hook) {
     wp_enqueue_script( 'thoughtmesh' );        
 }
 add_action( 'admin_enqueue_scripts', 'thoughtmesh_register_admin_scripts' );
+
+//Create the widget
+class ThoughtMesh_Widget extends WP_Widget {
+    // Main constructor
+    public function __construct() {
+        parent::__construct(
+            'thoughtmesh_widget',
+            __( 'Thoughtmesh Widget', 'thoughtmesh_text' ),
+            array(
+                'customize_selective_refresh' => true,
+            )
+        );
+    }
+    
+    // Display the widget
+    public function widget( $args, $instance ) {
+        //The widget only appears on single posts of type 'thoughtmesh_essays'
+        if ( get_post_type() != 'thoughtmesh_essays' || is_single() != true) {
+            return;
+        }
+
+        extract( $args );
+        // Check the widget options
+
+        // WordPress core before_widget hook (always include )
+        echo $before_widget;
+
+
+        echo '<div id="tm_container"></div>', PHP_EOL;
+
+        echo '    <div id="tm_footer">', PHP_EOL;
+        echo '        <div id="lexia-exerpts" style="border: 1px solid black; padding: 10px;">', PHP_EOL;
+        echo '            <div id="lexias-out" style="display: block;">', PHP_EOL;
+                        
+                            // $tags = get_terms(array('taxonomy'=>'thoughtmesh_tag'));
+                            // foreach($tags as $tag){
+                            //     $size = mt_rand(8, 24);
+                            //     echo "<a href='#' style='font-size: ".$size."px'>$tag->name</a> ";
+                            // }
+                        
+        echo '            </div>', PHP_EOL;
+        echo '        </div>', PHP_EOL;
+        echo '    </div>', PHP_EOL;
+
+        echo '<script type="text/javascript">', PHP_EOL;
+        echo '        jQuery(document).ready(function() {', PHP_EOL;
+        echo '            var options = {};', PHP_EOL;
+        echo '            options.externalTags = [];', PHP_EOL;
+        echo '            options.platform = "wordpress";', PHP_EOL;
+                        $tags = get_terms(array('taxonomy'=>'thoughtmesh_tag'));
+                        foreach($tags as $tag){
+                            echo "options.externalTags.push(\"$tag->name\");\n";
+                        }
+        echo '            jQuery("#tm_container").thoughtmesh(options);', PHP_EOL;
+        echo '            console.log(options);', PHP_EOL;
+        echo '        });', PHP_EOL;
+        echo '    </script> ', PHP_EOL;
+
+        // WordPress core after_widget hook (always include )
+        echo $after_widget;
+    }
+}
+// Register the widget
+function register_thoughtmesh_widget() {
+    register_widget( 'Thoughtmesh_Widget' );
+}
+add_action( 'widgets_init', 'register_thoughtmesh_widget' );
+
 
 add_action( 'init', 'create_thoughtmesh_essay' );
 add_action( 'init', 'register_thoughtmesh_taxonomy');

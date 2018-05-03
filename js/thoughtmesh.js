@@ -31,7 +31,9 @@ var thoughtMesh = {};
     	return false;
     };
     
-    defaults.proxy_url = current_script_path().replace('js/','')+'proxy.php';
+    defaults.proxy_url = current_script_path().replace('js/','');
+    if (-1 != defaults.proxy_url.indexOf('?')) defaults.proxy_url = defaults.proxy_url.substr(0, defaults.proxy_url.indexOf('?'));
+    defaults.proxy_url += 'proxy.php';
 
     //  Globally visible function called by implementing DOM element.
     $.fn.thoughtmesh = function(options) {
@@ -230,7 +232,8 @@ var thoughtMesh = {};
             return;
         } else if ('wordpress' == opts.platform.toLowerCase() && $.isEmptyObject(opts.data)) {
         	opts.data = {};
-        	opts.data.internal = opts.externalTags;
+        	opts.data.internal = {};
+        	opts.data.internal.tags = opts.externalTags;
             $.fn.thoughtmesh.setExternalData({
                 'documentId': 0,
                 'tags': opts.externalTags,

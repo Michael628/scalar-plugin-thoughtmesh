@@ -104,6 +104,22 @@
     margin-top:20px;
 }
 
+.widget #tm_container {
+	position:relative;
+}
+.widget #tm_container .tm_footer {
+	position:relative;
+	padding-top:30px;
+	padding-bottom:15px;
+}
+.widget #tm_container .tm_logo {
+	top:-18px;
+}
+.widget #tm_container .tm_doc_tags {
+	top:-13px;
+	font-size:14px;
+}
+
 /* adding custom fontello glyph font to work around glyphicons */
 @font-face {
   font-family: 'tm_glyphs';
@@ -155,12 +171,6 @@
 #tm_container .icon-tag:before { content: '\e801'; color: green;} /* '' */
 
 /* Subsetting and namespacing bootstrap grid styles */
-#tm_container .container-fluid {
-  margin-right: auto;
-  margin-left: auto;
-  padding-left: 15px;
-  padding-right: 15px;
-}
 #tm_container .row {
   margin-left: -15px;
   margin-right: -15px;

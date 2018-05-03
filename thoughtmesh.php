@@ -182,20 +182,6 @@ class ThoughtMesh_Widget extends WP_Widget {
 
         echo '<div id="tm_container"></div>', PHP_EOL;
 
-        echo '    <div id="tm_footer">', PHP_EOL;
-        echo '        <div id="lexia-exerpts" style="border: 1px solid black; padding: 10px;">', PHP_EOL;
-        echo '            <div id="lexias-out" style="display: block;">', PHP_EOL;
-                        
-                            // $tags = get_terms(array('taxonomy'=>'thoughtmesh_tag'));
-                            // foreach($tags as $tag){
-                            //     $size = mt_rand(8, 24);
-                            //     echo "<a href='#' style='font-size: ".$size."px'>$tag->name</a> ";
-                            // }
-                        
-        echo '            </div>', PHP_EOL;
-        echo '        </div>', PHP_EOL;
-        echo '    </div>', PHP_EOL;
-
         echo '<script type="text/javascript">', PHP_EOL;
         echo '        jQuery(document).ready(function() {', PHP_EOL;
         echo '            var options = {};', PHP_EOL;
@@ -225,6 +211,6 @@ add_action( 'init', 'create_thoughtmesh_essay' );
 add_action( 'init', 'register_thoughtmesh_taxonomy');
 add_action( 'admin_init', 'thoughtmesh_admin' );
 add_action( 'save_post', 'add_thoughtmesh_essay_fields', 10, 2 );
-add_filter( 'template_include', 'include_template_function', 1 );
+//add_filter( 'template_include', 'include_template_function', 1 );
 
 ?>

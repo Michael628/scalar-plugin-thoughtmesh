@@ -194,7 +194,7 @@ var thoughtMesh = {};
                 // Tags
                 var their_tags = opts.data.external[i].tags;
                 for (var j in opts.data.external[i].matched_tags) {
-                    var $glyph = $('<a href="javascript:void(null);" class="icon-tag" data-toggle="tooltip" data-placement="top" title="' + opts.data.external.lexias[i].matched_tags[j] + '"></a>').appendTo($row.children('.tm-tag'));
+                    var $glyph = $('<a href="javascript:void(null);" class="icon-tag" data-toggle="tooltip" data-placement="top" title="' + opts.data.external[i].matched_tags[j] + '"></a>').appendTo($row.children('.tm-tag'));
                     $glyph.data('tm-tag', opts.data.external[i].matched_tags[j]);
                 };
                 $row.children('.tm-tag').children().click(tagModal);
@@ -210,6 +210,7 @@ var thoughtMesh = {};
                 };
                 $keys.children().click(tagModal);
             };
+            $wrapper.append('<div class="row">&nbsp;</div>');
             $.getScript(current_script_path()+'bootbox.min.js', function(data, textStatus, jqxhr) {});
         }        
 
